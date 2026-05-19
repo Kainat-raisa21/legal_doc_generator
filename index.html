@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LexForge — AI Legal Document Generator</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Background grid -->
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-icon">⚖</span>
+      <span class="logo-text">Lex<em>Forge</em></span>
+    </div>
+    <nav class="nav">
+      <a href="#generator">Generator</a>
+      <a href="#docs">Document Types</a>
+      <a href="#about">About</a>
+    </nav>
+    <div class="header-badge">Powered by LangGraph + Llama</div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-label">AI-Powered Legal Intelligence</div>
+    <h1 class="hero-title">
+      Draft Legal Documents<br/>
+      <em>in seconds, not hours</em>
+    </h1>
+    <p class="hero-sub">
+      A multi-agent system that understands your context, asks clarifying questions,
+      and generates professionally structured legal documents — powered by open-source LLMs.
+    </p>
+    <div class="hero-cta">
+      <a href="#generator" class="btn-primary">Start Drafting</a>
+      <a href="#docs" class="btn-ghost">View Templates</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span>15+</span>Document Types</div>
+      <div class="stat"><span>100%</span>Free & Open Source</div>
+      <div class="stat"><span>AI</span>Multi-Agent</div>
+    </div>
+  </section>
+
+  <!-- Document Type Selector -->
+  <section class="section" id="docs">
+    <div class="section-label">Supported Documents</div>
+    <h2 class="section-title">What would you like to draft?</h2>
+    <div class="doc-grid" id="docGrid">
+      <!-- Filled by JS -->
+    </div>
+  </section>
+
+  <!-- Generator -->
+  <section class="section generator-section" id="generator">
+    <div class="section-label">AI Agent</div>
+    <h2 class="section-title">Document Generator</h2>
+
+    <div class="generator-layout">
+      <!-- Left: Chat / Input Panel -->
+      <div class="panel chat-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="status-dot"></span>
+            Agent Chat
+          </div>
+          <div class="agent-steps" id="agentSteps">
+            <span class="step" id="step-analyze">Analyze</span>
+            <span class="step-arrow">→</span>
+            <span class="step" id="step-clarify">Clarify</span>
+            <span class="step-arrow">→</span>
+            <span class="step" id="step-draft">Draft</span>
+            <span class="step-arrow">→</span>
+            <span class="step" id="step-review">Review</span>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <div class="message agent-message">
+            <div class="msg-icon">⚖</div>
+            <div class="msg-bubble">
+              Welcome to <strong>LexForge</strong>. I'm your AI legal drafting assistant.<br/><br/>
+              Select a document type from the panel above, or simply describe what legal document you need in the box below. I'll ask clarifying questions and generate a complete draft for you.
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-area">
+          <div class="selected-doc-badge" id="selectedDocBadge" style="display:none">
+            <span id="selectedDocName">None</span>
+            <button onclick="clearDocType()">✕</button>
+          </div>
+          <div class="input-row">
+            <textarea
+              id="userInput"
+              placeholder="Describe your document or ask a question…"
+              rows="3"
+            ></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="input-meta">
+            <span id="statusText">Ready</span>
+            <span class="model-badge">llama-3.3-70b-versatile via Groq</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Document Output Panel -->
+      <div class="panel doc-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="doc-icon">📄</span>
+            Generated Document
+          </div>
+          <div class="doc-actions" id="docActions" style="display:none">
+            <button class="action-btn" onclick="copyDoc()">Copy</button>
+            <button class="action-btn" onclick="downloadDoc()">Download .txt</button>
+            <button class="action-btn primary" onclick="downloadDocHTML()">Download .html</button>
+          </div>
+        </div>
+        <div class="doc-output" id="docOutput">
+          <div class="doc-placeholder">
+            <div class="placeholder-icon">📋</div>
+            <p>Your generated document will appear here.</p>
+            <p class="placeholder-sub">Start by describing your needs in the chat.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Config Panel -->
+    <div class="config-panel" id="configPanel">
+      <div class="config-header" onclick="toggleConfig()">
+        <span>⚙ Agent Configuration</span>
+        <span class="config-arrow" id="configArrow">▼</span>
+      </div>
+      <div class="config-body" id="configBody" style="display:none">
+        <div class="config-grid">
+          <div class="config-field">
+            <label>Groq API Key <span class="req">*</span></label>
+            <input type="password" id="groqKey" placeholder="gsk_..." />
+            <small>Get a free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></small>
+          </div>
+          <div class="config-field">
+            <label>Jurisdiction</label>
+            <select id="jurisdiction">
+              <option>United States (General)</option>
+              <option>United Kingdom</option>
+              <option>Canada</option>
+              <option>Australia</option>
+              <option>European Union</option>
+              <option>India</option>
+              <option>Other (specify in chat)</option>
+            </select>
+          </div>
+          <div class="config-field">
+            <label>Formality Level</label>
+            <select id="formality">
+              <option>Professional (Standard)</option>
+              <option>Formal (Court-ready)</option>
+              <option>Plain English (Simplified)</option>
+            </select>
+          </div>
+          <div class="config-field">
+            <label>Max Clarifying Questions</label>
+            <select id="maxQuestions">
+              <option value="2">2 (Quick Draft)</option>
+              <option value="4" selected>4 (Balanced)</option>
+              <option value="6">6 (Thorough)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-primary save-config-btn" onclick="saveConfig()">Save Configuration</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="section about-section" id="about">
+    <div class="section-label">Architecture</div>
+    <h2 class="section-title">How the AI Agent Works</h2>
+    <div class="flow-diagram">
+      <div class="flow-node">
+        <div class="flow-icon">🧠</div>
+        <div class="flow-name">Analyzer</div>
+        <div class="flow-desc">Identifies document type and extracts key entities from your input</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-icon">❓</div>
+        <div class="flow-name">Clarifier</div>
+        <div class="flow-desc">Asks targeted follow-up questions to fill missing legal details</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-icon">✍</div>
+        <div class="flow-name">Drafter</div>
+        <div class="flow-desc">Generates the full legal document with proper clauses and formatting</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <div class="flow-icon">🔍</div>
+        <div class="flow-name">Reviewer</div>
+        <div class="flow-desc">Checks for completeness, flags issues, and adds standard disclaimers</div>
+      </div>
+    </div>
+    <div class="tech-stack">
+      <div class="tech-item">LangGraph (State Machine)</div>
+      <div class="tech-item">Groq API (Free Tier)</div>
+      <div class="tech-item">Llama 3.3 70B</div>
+      <div class="tech-item">Vanilla JS</div>
+      <div class="tech-item">GitHub Pages Ready</div>
+    </div>
+    <div class="disclaimer-box">
+      <strong>⚠ Legal Disclaimer:</strong> LexForge generates document drafts for informational and starting-point purposes only.
+      Documents are not a substitute for professional legal advice. Always have important legal documents reviewed by a licensed attorney in your jurisdiction.
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="logo">
+      <span class="logo-icon">⚖</span>
+      <span class="logo-text">Lex<em>Forge</em></span>
+    </div>
+    <p>Open-source AI legal drafting. Built with LangGraph + Llama 3.3 via Groq.</p>
+    <p class="footer-sub">Not a law firm. Not legal advice. For informational use only.</p>
+  </footer>
+
+  <script src="agent.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
